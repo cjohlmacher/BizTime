@@ -8,7 +8,6 @@ router.get('/', async (req,res,next) => {
         const response = await db.query(`
             SELECT *
             FROM industries`);
-        console.log(response.rows);
         const industryPromises = response.rows.map(async (industry) => {
             const companies = await db.query(`
                 SELECT comp_code
@@ -24,7 +23,6 @@ router.get('/', async (req,res,next) => {
             return industry;
         });
         const industries = await Promise.all(industryPromises);
-        console.log(industries);
         return res.status(200).json({industries: industries})
     } catch(err) {
         return next(err);

@@ -78,12 +78,12 @@ describe('GET /companies:code', () => {
 
 describe('POST /companies', () => {
     test('Create new company', async () => {
-        const response = await request(app).post('/companies').send({code: 'apple', name: 'Apple Computer', description: 'Maker of OSX'});
+        const response = await request(app).post('/companies').send({name: 'Apple Computer', description: 'Maker of OSX'});
         expect(response.statusCode).toBe(201);
-        expect(response.body).toEqual({company: {code: 'apple', name: 'Apple Computer', description: 'Maker of OSX'}});
+        expect(response.body).toEqual({company: {code: 'apple-computer', name: 'Apple Computer', description: 'Maker of OSX'}});
     });
     test('Return error if company code already exists', async () => {
-        const response = await request(app).post('/companies').send({code: 'netflix', name: 'Apple Computer', description: 'Maker of OSX'});
+        const response = await request(app).post('/companies').send({name: 'Netflix', description: 'A different netflix'});
         expect(response.statusCode).toBe(500);
     });
 });
@@ -239,13 +239,13 @@ describe('GET /industries', () => {
 
 describe('POST /industries/:ind_code/companies', () => {
     test('Add association between industry and company', async () => {
-        await request(app).post('/companies').send({code: 'apple', name: 'Apple Computer', description: 'Maker of OSX'});
-        const response = await request(app).post('/industries/ent/companies').send({comp_code: 'apple'});
+        await request(app).post('/companies').send({name: 'Apple Computer', description: 'Maker of OSX'});
+        const response = await request(app).post('/industries/ent/companies').send({comp_code: 'apple-computer'});
         expect(response.statusCode).toBe(201);
-        expect(response.body).toEqual({industry: {code: 'ent', name: 'Entertainment', companies: ['netflix','apple']}});
+        expect(response.body).toEqual({industry: {code: 'ent', name: 'Entertainment', companies: ['netflix','apple-computer']}});
     });
     test('Returns error if industry code does not exist', async () => {
-        const response = await request(app).post('/industries/zzz/companies').send({comp_code: 'apple'});
+        const response = await request(app).post('/industries/zzz/companies').send({comp_code: 'netflix'});
         expect(response.statusCode).toBe(500);
     });
     test('Returns error if company code does not exist', async () => {
