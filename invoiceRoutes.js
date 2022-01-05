@@ -6,7 +6,7 @@ const db = require('./db');
 router.get('/', async (req,res,next) => {
     try {
         const results = await db.query(`
-            SELECT * 
+            SELECT id,comp_code 
             FROM invoices`);
         return res.status(200).json({invoices: results.rows});
     } catch (err) {
@@ -61,13 +61,22 @@ router.post('/', async (req,res,next) => {
 router.patch('/:id', async (req,res,next) => {
     try {
         const id = req.params.id;
-        const { amt } = req.body;
+        const { amt, paid } = req.body;
+        const invoicesResult = await db.query(`
+            SELECT *
+            FROM invoices
+            WHERE id=$1`, [id]);
+        if (invoicesResult.rows.length !== 1 ) {
+            throw new ExpressError(`Error updating resource: ${id}`,404);
+        };
+        const currentInvoice = invoicesResult.rows[0];
+        const paid_date = paid == currentInvoice.paid ? currentInvoice.paid_date : paid ? new Date() : null;
         const results = await db.query(`
             UPDATE invoices
-            SET amt=$1
-            WHERE id=$2
+            SET amt=$1, paid=$2, paid_date=$3
+            WHERE id=$4
             RETURNING id, comp_code, amt, paid, add_date, paid_date`, 
-            [amt,id]);
+            [amt,paid,paid_date,id]);
         if (results.rows.length === 0 ) {
             throw new ExpressError(`Error updating resource: ${id}`,404);
         };
@@ -90,7 +99,7 @@ router.delete('/:id', async (req,res,next) => {
         if (results.rows.length > 0 ) {
             throw new ExpressError(`Error deleting resource`, 404);
         }
-        return res.status(200).json({message: 'Deleted'});
+        return res.status(200).json({status: 'Deleted'});
     } catch(err) {
         return next(err);
     }

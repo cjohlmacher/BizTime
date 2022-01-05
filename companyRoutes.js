@@ -31,6 +31,18 @@ router.get('/:code', async (req,res,next) => {
             WHERE comp_code = $1`, [code]
             );
         company.invoices = invoices.rows;
+        const industries = await db.query(`
+            SELECT industries.name
+            FROM companies
+            LEFT JOIN company_industries 
+            ON companies.code = comp_code
+            JOIN industries
+            ON industries.code = ind_code
+            WHERE comp_code = $1`, [code]
+            );
+        company.industries = industries.rows.map(industry => {
+            return industry.name;
+        });
         return res.status(200).json({company: company})
     } catch (err) {
         return next(err);
@@ -38,8 +50,8 @@ router.get('/:code', async (req,res,next) => {
 });
 
 router.post('/', async (req,res,next) => {
-    const {code, name, description} = req.body;
     try {
+        const {code, name, description} = req.body;
         const results = await db.query(`
             INSERT INTO companies 
             (code, name, description)
@@ -85,7 +97,7 @@ router.delete('/:code', async (req,res,next) => {
         if (results.rows.length > 0 ) {
             throw new ExpressError(`Error deleting resource`, 404);
         }
-        return res.status(200).json({message: 'Deleted'});
+        return res.status(200).json({status: 'Deleted'});
     } catch(err) {
         return next(err);
     }
